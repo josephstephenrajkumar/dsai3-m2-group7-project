@@ -1,15 +1,15 @@
 # Dagster + Meltano + dbt: Automated CSV to BigQuery ELT Pipeline
 
 This is the repository for DASI3 Module 2 project, completed by Group 7.
-https://github.com/chenchaosg/dsai3-m2-group7-project.git
 
 ## Group 7 Members:
-  - Chen Chao
-  - Chin Guan Xun
-  - Darwin
-  - Joseph
-  - Nathaniel
-
+```
+  Chen Chao
+  Chin Guan Xun
+  Darwin
+  Joseph
+  Nathaniel
+```
 This project demonstrates a robust, automated data pipeline that extracts data from multiple CSV files, and loads it into Google BigQuery. The entire workflow is orchestrated by [Dagster](https://dagster.io/) and leverages [Meltano](https://meltano.com/) and [dbt](https://www.getdbt.com/) for the core ELT (Extract, Load, Transform) process.
 
 ## Overview
@@ -29,6 +29,7 @@ Then it uses dbt to make necessary data transform and save the facts and dimensi
 *   **Environment Management**: [Conda](https://docs.conda.io/en/latest/)
 
 ## Project Structure
+```
 .
 ├── dbt_orchestration/
 ├── meltano_orchestration/
@@ -38,6 +39,7 @@ Then it uses dbt to make necessary data transform and save the facts and dimensi
 ├── setup.cfg
 ├── setup.py
 └── README.md # This file
+```
 
 ## Setup and Installation
 
@@ -59,6 +61,7 @@ https://github.com/chenchaosg/dsai3-m2-group7-project.git
 ### 3. Create and Activate Conda Environment
 
 ```bash
+# go to dagster project directory
 cd olist-orchestration
 
 # Create a new conda environment
@@ -69,7 +72,7 @@ conda activate dagster
 ```
 
 ### 4. configure some yml files.
-
+```
 In meltano_orchestration/meltano.yml file, edit following lines:
     - credentials_path: 
         <your-gcp-credentials-path>
@@ -90,7 +93,7 @@ In dbt_orchestration/models/staging/stg_sources.yml file, edit following lines:
 
 In dbt_orchestration/models/staging/stg_olist_xxx.sql file, edit your own dataset and table name
 In dbt_orchestration/models/staging/stg_olist_xxx.yml file, edit your stage table name
-
+```
 ### 5. (Optional) System Requirement: File Descriptors
 Modern data tools can open many files simultaneously. To prevent OSError: [Errno 24] Too many open files, you must increase the file descriptor limit in the shell session where you run Dagster.
 
@@ -124,7 +127,7 @@ Click the "Launch run" button to manually trigger the pipeline.
 
 Enable the Schedule: In the Dagster UI, navigate to Overview > Schedules.
 
-You will see meltano_schedule, which is configured to run daily at midnight.
+You will see meltano_schedule, which is configured to run based on your cron expression.
 
 Click the toggle switch to turn the schedule on.
 
@@ -167,4 +170,4 @@ Click the "Launch run" button to manually trigger the pipeline.
 
 Enable the Schedule: In the Dagster UI, navigate to Overview > Schedules.
 
-You will see dbt_schedule, which is configured to run daily at midnight.
+You will see dbt_schedule, which is configured to run based on your cron expression.

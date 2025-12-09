@@ -1,5 +1,6 @@
 
 # Sub Meltano Module Structure
+```
 .
 ├── meltano_orchestration/
 | ├── data/
@@ -10,7 +11,7 @@
 │ |── definitions.py # Core Dagster definitions (Ops, Jobs, Schedules)
 | ├── meltano.yml # Meltano project configuration
   └── README.md # This file
-
+```
 *   `data/`: Directory where all source CSV files should be placed.
 *   `definitions.py`: The heart of the Dagster application. It defines the Ops that make up the pipeline, the Job that connects them, and the Schedule that runs the Job. Both Meltano and dbt jobs are placed here.
 *   `meltano.yml`: Configures the Meltano plugins (`tap-csv`, `target-bigquery`) and their settings.
