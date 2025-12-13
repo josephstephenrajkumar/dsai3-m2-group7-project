@@ -2,19 +2,43 @@
 version: 2
 
 sources:
-  - name: <your GCP Meltano dataset>
-    description: "Source data loaded by Meltano from the Olist public dataset."
-    database: <your GCP project ID>
-    schema: <your GCP Meltano dataset>
+  - name: olist_dataset # This is the source name used in the `source()` function
+    description: "The raw dataset containing all tables for the Olist e-commerce platform."
+    database: ntusctp # GCP project ID
+    schema: olist_dataset # Meltano dataset
     
-    # all 9 tables in the dataset
+    # We add a freshness check to ensure our raw data is not too old.
+    freshness:
+      warn_after: {count: 24, period: hour}
+      error_after: {count: 48, period: hour}
+    
+    # We define all the tables that belong to this source.
+    # The `name` here is the actual table name in your BigQuery dataset.
     tables:
       - name: olist_customers_dataset
-      - name: olist_geolocation_dataset
-      - name: olist_order_items_dataset
-      - name: olist_order_payments_dataset
-      - name: olist_order_reviews_dataset
-      - name: olist_orders_dataset
-      - name: olist_products_dataset
+        description: "Raw customers data."
+
       - name: olist_sellers_dataset
+        description: "Raw sellers data."
+
+      - name: olist_products_dataset
+        description: "Raw products data."
+
+      - name: olist_orders_dataset
+        description: "Raw orders data."
+
+      - name: olist_order_items_dataset
+        description: "Raw order items data."
+
+      - name: olist_order_payments_dataset
+        description: "Raw order payments data."
+
+      - name: olist_order_reviews_dataset
+        description: "Raw order reviews data."
+
+      - name: olist_geolocation_dataset
+        description: "Raw geolocation data."
+        
       - name: product_category_name_translation
+        description: "Table for translating product category names to English."
+
