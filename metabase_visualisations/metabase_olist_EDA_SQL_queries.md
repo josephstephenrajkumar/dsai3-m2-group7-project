@@ -422,7 +422,15 @@ WHERE
   average_review_score = 5;
 ```
 
-### 3. Top 10 Best Sellers by Revenue
+### 3. Distribution of Sellers by State
+```sql
+SELECT seller_state, COUNT(DISTINCT seller_id) as unique_sellers 
+FROM `my-project-dsai-3.olist_data.fct_orders` 
+GROUP BY seller_state 
+ORDER BY unique_sellers DESC;
+```
+
+### 4. Top 10 Best Sellers by Revenue
 ```sql
 SELECT
   seller_id,
@@ -443,7 +451,7 @@ LIMIT
   10;
 ```
 
-### 4. 5* rating sellers with total order of more than 5
+### 5. 5* rating sellers with total order of more than 5
 ```sql
 SELECT
   seller_id,
@@ -463,7 +471,7 @@ ORDER BY
   total_orders DESC;
 ```
 
-### 5. Top 10 Worst Sellers by Customer Satisfaction (Number of Orders >20)
+### 6. Top 10 Worst Sellers by Customer Satisfaction (Number of Orders >20)
 ```sql
 SELECT
   seller_id,
@@ -483,7 +491,7 @@ ORDER BY
   total_orders ASC;
 ```
 
-### 6. Fastest Sellers to Ship with >20 # of Orders
+### 7. Fastest Sellers to Ship with >20 # of Orders
 ```sql
 SELECT
   seller_id,
@@ -504,7 +512,7 @@ LIMIT
   10;
 ```
 
-### 7. Processing Time vs Shipping Time
+### 8. Processing Time vs Shipping Time
 ```sql
 SELECT
   TIMESTAMP_TRUNC(
@@ -525,7 +533,7 @@ ORDER BY
   order_purchase_at ASC;
 ```
 
-### 8. Review Score vs Delivery Status
+### 9. Review Score vs Delivery Status
 ```sql
 SELECT
     -- 1. Create the two segments using a CASE statement. This is our dimension.
@@ -551,7 +559,117 @@ GROUP BY
     delivery_status;
 ```
 
-### 9. Late Delivery Rate by State
+### 10. Top Sellers Stats
+```sql
+-- Step 1: Use the seller dimension table.
+WITH seller_performance AS (
+    SELECT
+        seller_id,
+        total_revenue,
+        average_review_score
+    FROM
+        my-project-dsai-3.olist_data.dim_sellers
+),
+
+-- Step 2: Calculate the grand totals for the entire company.
+company_totals AS (
+    SELECT
+        COUNT(seller_id) AS total_sellers,
+        SUM(total_revenue) AS grand_total_revenue
+    FROM
+        seller_performance
+),
+
+-- Step 3: Rank all sellers by their revenue.
+sellers_with_rank AS (
+    SELECT
+        sp.seller_id,
+        sp.total_revenue,
+        sp.average_review_score,
+        RANK() OVER (ORDER BY sp.total_revenue DESC) as seller_rank
+    FROM
+        seller_performance sp
+),
+
+-- Step 4: Identify the "Top 1%" sellers using the rank.
+top_sellers AS (
+    SELECT
+        sr.seller_id,
+        sr.total_revenue,
+        sr.average_review_score
+    FROM
+        sellers_with_rank sr
+    WHERE
+        sr.seller_rank <= (SELECT CAST(total_sellers * 0.01 AS INT64) FROM company_totals)
+)
+
+-- Final Step (Unchanged): Aggregate the metrics for the "Top 1%" group.
+SELECT
+    (SELECT total_sellers FROM company_totals) AS total_sellers,
+    COUNT(ts.seller_id) AS top_sellers_count,
+    SAFE_DIVIDE(COUNT(ts.seller_id), (SELECT total_sellers FROM company_totals)) * 100 AS top_sellers_percentage,
+    (SELECT grand_total_revenue FROM company_totals) AS grand_total_revenue,
+    SUM(ts.total_revenue) AS top_sellers_revenue,
+    SAFE_DIVIDE(SUM(ts.total_revenue), (SELECT grand_total_revenue FROM company_totals)) * 100 AS top_sellers_revenue_percentage,
+
+    AVG(ts.average_review_score) AS top_sellers_avg_review_score
+FROM
+    top_sellers ts;
+```
+
+### 11. List of Top Sellers
+```sql
+WITH seller_performance AS (
+    SELECT
+        seller_id,
+        total_revenue,
+        average_review_score
+    FROM
+        my-project-dsai-3.olist_data.dim_sellers
+),
+
+-- Step 2: Calculate the grand totals for the entire company.
+company_totals AS (
+    SELECT
+        COUNT(seller_id) AS total_sellers,
+        SUM(total_revenue) AS grand_total_revenue
+    FROM
+        seller_performance
+),
+
+-- Step 3: Rank all sellers by their revenue.
+sellers_with_rank AS (
+    SELECT
+        sp.seller_id,
+        sp.total_revenue,
+        sp.average_review_score,
+        RANK() OVER (ORDER BY sp.total_revenue DESC) as seller_rank
+    FROM
+        seller_performance sp
+),
+
+-- Step 4: Identify the "Top 1%" sellers using the rank.
+top_sellers AS (
+    SELECT
+        sr.seller_id,
+        sr.total_revenue,
+        sr.average_review_score
+    FROM
+        sellers_with_rank sr
+    WHERE
+        sr.seller_rank <= (SELECT CAST(total_sellers * 0.01 AS INT64) FROM company_totals)
+)
+
+-- Final Step : List the top 1% sellers.
+SELECT
+    seller_id,
+    total_revenue,
+    average_review_score
+FROM
+    top_sellers;
+```
+
+### 12. Late Delivery Rate by State
 ```sql
 -- This query calculates, for each state:
 -- 1. Total Revenue (GMV)
@@ -596,7 +714,7 @@ SELECT
     SAFE_DIVIDE(
         sp.late_deliveries,
         sp.total_deliveries
-    ) * 100 AS late_delivery_percentage
+    ) AS late_delivery_percentage
 FROM
     state_performance sp
 WHERE
@@ -605,66 +723,6 @@ WHERE
     sp.total_revenue > (SELECT SUM(total_revenue) * 0.02 FROM state_performance)
 ORDER BY
     total_revenue DESC;
-```
-
-### 10. Top Sellers Stats
-```sql
--- Step 1: Use the seller dimension table.
-WITH seller_performance AS (
-    SELECT
-        seller_id,
-        total_revenue,
-        average_review_score
-    FROM
-        my-project-dsai-3.olist_data.dim_sellers
-),
-
--- Step 2: Calculate the grand totals for the entire company.
-company_totals AS (
-    SELECT
-        COUNT(seller_id) AS total_sellers,
-        SUM(total_revenue) AS grand_total_revenue
-    FROM
-        seller_performance
-),
-
--- Step 3: Rank all sellers by their revenue.
-sellers_with_rank AS (
-    SELECT
-        sp.seller_id,
-        sp.total_revenue,
-        sp.average_review_score,
-        RANK() OVER (ORDER BY sp.total_revenue DESC) as seller_rank
-    FROM
-        seller_performance sp
-),
-
--- Step 4: Identify the "Top 1%" sellers using the rank.
-top_sellers AS (
-    SELECT
-        sr.seller_id,
-        sr.total_revenue,
-        sr.average_review_score
-    FROM
-        sellers_with_rank sr
-    WHERE
-        -- *** THE FIX IS HERE: The subquery is now correctly enclosed in parentheses. ***
-        sr.seller_rank <= (SELECT CAST(total_sellers * 0.01 AS INT64) FROM company_totals)
-)
-
--- Final Step (Unchanged): Aggregate the metrics for the "Top 1%" group.
-SELECT
-    (SELECT total_sellers FROM company_totals) AS total_sellers,
-    COUNT(ts.seller_id) AS top_sellers_count,
-    SAFE_DIVIDE(COUNT(ts.seller_id), (SELECT total_sellers FROM company_totals)) AS top_sellers_percentage,
-    
-    (SELECT grand_total_revenue FROM company_totals) AS grand_total_revenue,
-    SUM(ts.total_revenue) AS top_sellers_revenue,
-    SAFE_DIVIDE(SUM(ts.total_revenue), (SELECT grand_total_revenue FROM company_totals)) AS top_sellers_revenue_percentage,
-
-    AVG(ts.average_review_score) AS top_sellers_avg_review_score
-FROM
-    top_sellers ts;
 ```
 
 ### PRODUCTS TAB
